@@ -1,4 +1,105 @@
+# ブラウザとJavascript
+
+ * [W3C HTML5.1 2nd](https://www.w3.org/TR/html51/)
+
+## HTMLレンダリングエンジン
+HTML、CSSのパースや画面描画はレンダリングエンジンと呼ばれる構成要素によって実現されています。
+
+* [ブラウザの仕組み: 最新ウェブブラウザの内部構造](https://www.html5rocks.com/ja/tutorials/internals/howbrowserswork/)
+
+* [Life of a Pixel 2018](https://docs.google.com/presentation/d/1boPxbgNrTU0ddsc144rcXayGA_WF53k96imRH8Mp34Y/edit#slide=id.g26f22ee049_1_94)
+
+p9 stages をみてレンダリングパイプラインに目を通してください
+
+
+### レンダリングエンジン
+* [Gecko](https://developer.mozilla.org/en-US/docs/Mozilla/Gecko)
+* [WebKit](https://webkit.org/)
+* [Blink](https://www.chromium.org/blink)
+
+#### DOM (Document Object Model)
+HTMLパースして作られた構成要素をオブジェクト構造で表現したもの。
+このDOMに基づいて画面を描画する。
+
+* [ドキュメントオブジェクトモデル (DOM)](https://developer.mozilla.org/ja/docs/Web/API/Document_Object_Model)
+
+DOMを操作するJavascriptのAPIも含む
+
+## HTTP通信
+ブラウザはURLに基づいて、適切な通信を実施してデータを取得します。
+
+* [非公式らしいですが日本語のRFC](https://triple-underscore.github.io/RFC723X-ja.html)
+
+
+### HTTP リクエスト
+HTTP通信をおこなうためのリクエストの仕様。特にヘッダが重要。
+
+* [RFC 7231](https://httpwg.org/specs/rfc7231.html#request.header.fields)
+
+
+### HTTP レスポンス
+基本はHTML。但し、ステータスコードとヘッダは重要。
+
+#### ステータスコード
+通常時は200（OK）
+
+* [RFC7321](https://httpwg.org/specs/rfc7231.html#status.codes)
+
+#### レスポンスヘッダ
+
+* [RFC7321](https://httpwg.org/specs/rfc7231.html#response.header.fields)
+
+|ヘッダ|説明|
+|---|---|
+|Content-Type|表示のフォーマットを表すヘッダ。|
+|Expires|コンテンツの有効期間|
+|E-Tag|コンテンツの状態を表すヘッダ。この値が一致している場合コンテンツは変更されていないことを表す。（キャッシュの有効性などで利用される）|
+
+## Javascriptエンジン
+
+* [V8](https://v8.dev/)
+* JavascriptCore (Nitro) --WebKit組み込み
+* [SpiderMonkey](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey)
+
+## APIの提供
+ブラウザの機能を拡張するためのAPIが提供されています。
+
+* [JavaScript API 群](https://developer.mozilla.org/ja/docs/Mozilla/Add-ons/WebExtensions/API)
+
+
+
+## 表示のプラグイン
+ブラウザで表示するものはHTMLだけではなく、PDFをはじめとする別のファイルフォーマット（映像なども含む）を表示することも意図されます。
+この識別はContent-Typeによっておこなわれます。この値はMIMEタイプが指定されます。
+
+### MIME(Multipurpose Internet Mail Extention)
+もともとはメールで添付メールを処理するための規格。
+データフォーマットを定義しているため、Content-Typeヘッダーの値として用いられます。
+タイプ/サブタイプで表されます。
+
+|表示|フォーマット種類|
+|---|---|
+|image/jpeg|JPEG画像|
+|application/json|JSON|
+|text/html|HTML|
+
+* [MIME タイプの不完全な一覧
+](https://developer.mozilla.org/ja/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Complete_list_of_MIME_types)
+
+
+## 宿題0
+ブラウザの開発環境を用いて、以下の内容を試してください
+* コンソールにHello JSWorld! と出力する
+* 適当な場所（Googleなど）を表示して、画面の上部に適切なメッセージを追加して描画してください。
+* あるキーワードをブラウザに保存して、一度ブラウザを閉じてからそのキーワードを取り出してください。
+
 # 基本概念と環境
+もともとはブラウザの言語だったJavascriptを別環境で動作させることを考え始めた。
+
+Javascriptは言語として標準化され実装されるようになった。
+
+* [ECMAscript](https://jsprimer.net/basic/ecmascript/)
+
 
 ## Node.js について
 
@@ -91,19 +192,25 @@ nodist global 11.0.2
 1. npm init コマンドを実行してpackage.jsonを生成してください
 
 # Single Page Application (SPA)
+Single Page ApplicationはモダンなWebアプリケーションを表す言葉であり、サーバサイドとの通信によって画面遷移を実施しないアプリケーションのことをいいます。
 
 ## レンダリング方法
-### サーバサイドでHTMLをJavaなどでレンダリングする
+ポイントとなるのはHTMLの出力（レンダリングも含む）をどこでどのようにおこなうのかです。以下によくある方法を記します。
 
-### サーバサイドでHTMLをJavascriptでレンダリングする（SSR）
+### サーバサイドでHTMLをJavaなどでレンダリングする
+今まで（SPAでない）のHTML出力方法で、サーバサイドのプログラムにてHTMLを組み立てます。古くはJSP、VelocityからThymeleafまでJavaにおけるHTML出力のライブラリは多岐にわたります。
 
 ### DOMを操作してJavascriptでレンダリングする
+前述のDOMAPIを使って、すべての要素をレンダリングします。
+そのため、DOMツリーの一部を取り替えることでメインの画面を切り替えます。
+
+### サーバサイドでHTMLをJavascriptでレンダリングする（SSR）
+クライアントサイドでDOMを操作して表示するロジックをそのままつかって、サーバサイドでDOMを作り、それをHTML出力するやり方です。
+これはクライアントと同じプログラムを利用しながら、HTMLとして送信することでSEOやアクセシビリティ上の課題をクリアするものです。
 
 ## 宿題2
 SPAが脚光を浴びている理由を3つ列挙してください。
 また、SPAにすることによって難しくなったことを2つ上げてください。
-
-
 
 # 画面コンポーネント
 画面を分割して、再利用可能な部品の組み合わせで構成する考え方です。ネイティブアプリでは普通に不買われており、部品自体が販売されて、利用されています。
@@ -129,7 +236,52 @@ SPAが脚光を浴びている理由を3つ列挙してください。
 
 
 ## 画面コンポーネントの例と利用
+HTMLの一部として、カスタム要素を用います。
+以下の例はhttps://w3c.github.io/webcomponents/spec/custom/ から引用しています。
 
+``` html
+<flag-icon country="nl"></flag-icon>
+```
+
+flag-iconという名前の要素はHTMLにはありませんが画面コンポーネントとして定義したものを利用できるということです。
+
+``` javascript
+class FlagIcon extends HTMLElement {
+  constructor() {
+    super();
+    this._countryCode = null;
+  }
+
+  static get observedAttributes() { return ["country"]; }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    // name will always be "country" due to observedAttributes
+    this._countryCode = newValue;
+    this._updateRendering();
+  }
+  connectedCallback() {
+    this._updateRendering();
+  }
+
+  get country() {
+    return this._countryCode;
+  }
+  set country(v) {
+    this.setAttribute("country", v);
+  }
+
+  _updateRendering() {
+    // Left as an exercise for the reader. But, you'll probably want to
+    // check this.ownerDocument.defaultView to see if we've been
+    // inserted into a document with a browsing context, and avoid
+    // doing any work if not.
+  }
+}
+```
+以下の記述でこのクラスコンポーネントとflag-icon要素をマッピングします。
+```javascript
+customElements.define("flag-icon", FlagIcon);
+```
 
 
 ## 画面の構造設計
@@ -213,7 +365,8 @@ node.jsをベースに構築したソースコードをWebで動作させる必�
 ## Promise
 
 
-# ブラウザとJavascript
+
+
 
 
 
@@ -233,9 +386,17 @@ const  sample =  (arg1) => return arg1
 仮引数の括弧は省略できる。
 
 ## dictの取り扱い
-``` es6
+``` javascript
 {style} = props
 ```
+
+## ストリーミングAPI
+### map
+
+### filter
+
+### reduce
+
 
 ## モジュールのインポート、エクスポート
 
