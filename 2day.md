@@ -33,7 +33,11 @@ FluxのReact実装。
 
 ### mapDispatchToProps
 
+# React/Reduxを使った場合の画面構成の設計とディレクトリ構造
+構成要素と粒度を定義されている
+## Atoms 設計
 
+## Page/Container/Component
 
 
 

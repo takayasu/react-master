@@ -107,12 +107,56 @@ Javascriptは言語として標準化され実装されるようになった。
  [Node.jsとは（公式）](https://nodejs.org/ja/about/)
 
 * Javascript実行環境（ブラウザ外）
+* シングルスレッド
 * 非同期処理
+* イベント駆動
 
 モダンなJavascript開発環境のベースになる。
 * React
 * Vue.js
 * Angular
+
+## 非同期処理
+非同期処理とは、タスク実行中でも他のタスクが実行出来る状態を表します。このことはIO待ちなどのCPUを効率よく利用出来ない局面において効果的です。
+
+### 並行処理と並列処理
+* [並行処理と並列処理](http://freak-da.hatenablog.com/entry/20100915/p1)
+
+NodeJSでは、シングルスレッドであるため、並行処理になります。
+待ちが発生する処理（ファイルIO、HTTP通信など）は具体的にはどのような処理になるのかをみてみます。
+
+### コールバック
+
+```javascript
+var request = require('request');
+
+request.get('http://www.google.co.jp', function(err, res, body) {
+  if (err) {
+    console.log(’Error’,err);
+    return;
+  }
+  console.log(res);
+});
+console.log('通信中');
+```
+この例ではrequestモジュールを利用して、HTTP通信をしています。通信リクエストがされた後は処理は次に進むため、通信中という文言がコンソールに出力されます。
+
+ここでの無名関数 *function(err, res, body)* がコールバックになっており、HTTP通信完了後に呼び出されます。ここでの関数は無名関数（わかりやすいようにfunctiondeで記載した）だけでなく、アロー関数での記述や関数を格納した変数を設定することも可能です。
+
+### Promise
+コールバック関数は一つであれば特に問題ではないが、コールバックの中から非同期処理を実施したり、エラー処理をしたりするなどネストされることが想定され可読性の低いソースコードになることが懸念されます。（実際に多かった）そのため、Promiseと呼ばれる仕組みを利用します。
+
+```javascript
+var requestPromise = require('request-promise');
+var promise = requestPromise('http://www.google.com')
+
+promise.then((success)  => {
+      console.log(success)
+    }).catch( (error) => {
+      console.log('Error',error)
+});
+```
+requestモジュールのPromise版であるrequest-promiseを用いてコールバック版をPromiseで書き換えたものです。
 
 ## npm について
 ### npm とは
@@ -179,7 +223,6 @@ nodist add 11.0.2
 nodist global 11.0.2
 ```
 
-
 他にも以下のような環境がある。
 * nvm
 * nodebrew
@@ -190,6 +233,7 @@ nodist global 11.0.2
 1. node環境を一つ(nodistなど)選択して、インストールをしてみましょう。その後で、Node.js 11.12.0 をインストールしてください。
 1. この演習用にディレクトリを作成し、そのフォルダに移動してそのフォルダでのNode.jsのバージョンをインストールするバージョンにします。
 1. npm init コマンドを実行してpackage.jsonを生成してください
+1. 上記で記載したHTTP通信をおこなうプログラムを作成し、nodeコマンドを使って実行してください
 
 # Single Page Application (SPA)
 Single Page ApplicationはモダンなWebアプリケーションを表す言葉であり、サーバサイドとの通信によって画面遷移を実施しないアプリケーションのことをいいます。
@@ -283,23 +327,6 @@ class FlagIcon extends HTMLElement {
 customElements.define("flag-icon", FlagIcon);
 ```
 
-
-## 画面の構造設計
-* 画面のデータ構造と見栄えについて
-* 画面共通と実装
-* データ構造と再利用（状態の差異）
-* 構成要素と粒度
-
-
-
-### Atoms 設計
-
-### Page/Container/Component
-
-## 宿題3
-今までのプロジェクト（設計が終わっていれば進行形でもよい）で、画面設計書をみて、画面分割をして構造的に設計するとどうなるかを検討して、画面設計書を作成してください。（一つだけでよいです）
-
-
 # コンポーネント間でデータを渡す
 
 ## ステートの考え方
@@ -331,73 +358,248 @@ Reactだけではなく、
 注目すべきはReactViewsから一方向で処理されているところです。
 
 ### Action
+ステータスが変更される動作種類（共通操作）とReducerがStoreの状態を変更するための情報を表すオブジェクト（Object型）。
+
+```javascript
+{
+  type: ADD_COUNT,
+  value: count
+}
+```
 
 ### Action Creators
+コンポーネントのイベントとして呼び出される関数。上記のActionを返戻する。
+
+以下のようにDispatchをAction Creatorで作成するパターンと
+```javascript
+export const increment = (count) => {
+    return (dispatch) => {
+      dispatch (
+        {
+         type: ADD_COUNT,
+          value: count
+        }
+      )
+}
+```
+
+以下のようにdispatchはさせずにmapDispatchToPropsでbindActionCreatorsを使ってDispatchで呼び出すパターンで実装が2通りある。
+（React/Reduxの場合）
+```javascript
+export const increment = (count) => {
+    return {
+        type: ADD_COUNT,
+        value: count
+    }
+}
+```
+```javascript
+const mapDispatchToProps = (dispatch) => {
+    return bindActionCreators({increment}, dispatch)
+};
+```
 
 ### Dispatcher
+上記のActionを受け取って、新しいStoreを作成する関数。
+Storeの状態は不変オブジェクトとして取り扱うのがルールであるため、新しいオブジェクトに値をコピーしています。
+
+```javascript
+export const increment_reduxer = (state = [] , action) => {
+
+    switch (action.type) {
+        case ADD_COUNT:
+            return {...state,count: state.count + action.value};
+        default:
+            return state;
+    }
+}
+```
 
 ### Store
+SPAのアプリケーション全体が必要としている状態をすべて格納するオブジェクト（Object型）。
+```javascript
+import { createStore, applyMiddleware } from 'redux';
+
+const store = createStore(
+    rootReducer,
+    applyMiddleware(logger)
+);
+
+export default store;
+}
+```
+Middlewareの概念はここでは割愛します。作成したReducerをまとめるか、列挙してReduxのcreateStore関数でStoreを作り、アプリケーション全体から参照するために以下のように記載します。（React/Reduxの場合）
+
+```javascript
+ReactDOM.render(
+    <Provider store={store} >
+        <App />
+    </Provider>
+    ,
+    document.getElementById('root')
+);
+```
+このあたりの細かい解説は次回。
 
 ### mapping(Change Event + Store Query)
+Storeは全体のステートとアクションを管理するため、各コンポーネントで必要な情報からみるとかなり大規模のものでわかりにくいものです。そのため、コンポーネント単位で必要なものをマッピングして、このコンポーネントから利用することを宣言します。
+
+```javascript
+const mapDispatchToProps = (dispatch) => {
+    return bindActionCreators({friend}, dispatch)
+};
+
+const mapStateToProps = (state) => {
+    return {data: state.findall_friend_reducer.data};
+}
+
+export default connect(mapStateToProps,mapDispatchToProps)(FriendList);
+```
+
+|関数名|説明|
+|---|---|
+| mapStateToProps| 状態をマッピングするメソッド（慣習）｜
+|mapDispatchToProps|DispatcherとマッピングするActionCreator（慣習）|
+|connect| 上記のマッピングとコンポーネントを結びつける関数|
+
+# 画面の構造設計
+* 画面のデータ構造と見栄えについて
+* 画面共通と実装
+* データ構造と再利用（状態の差異）
+* 構成要素と粒度
+詳細は次回、具体的な実装をみて、ディレクトリ構造を含めて説明します。
+
+## 宿題3
+今までのプロジェクト（設計が終わっていれば進行形でもよい）で、画面設計書をみて、画面分割をして構造的に設計するとどうなるかを検討して、画面設計書を作成してください。（一つだけでよいです）
 
 # モダンJSの開発
-## トランスパイル
-
-## 単一モジュール化
+モダンJS（脱jQuery)はブラウザに依存したイベント関数を列挙するという形ではなく、画面などをプログラムで作成するようなプログラミングモデルに変更されました。しかし、ブラウザがそのプログラミングモデルに対応したわけではありません。
 
 ## Web化
-node.jsをベースに構築したソースコードをWebで動作させる必要がある。
+node.jsをベースに構築したソースコードをWebで動作させる必要があります。
 
+### トランスパイル
+プログラミングモデルにそって作ったJavascriptをブラウザで動作できるJavascriptとする必要があります。スクリプトからスクリプトに変換する動作をコンパイルするわけではないこともあり、トランスパイルと呼ばれます。
+
+* [babel](https://babeljs.io/)
+
+### 単一モジュール化
+複数ファイル（アプリケーションコード、パッケージ）を統合し、ブラウザから容易に参照できるように単一のJSPファイルに変換します。
+この変換はwebpackで実施されることが多かったですが、以下のビルドと関係しますが、各フレームワークのCLIでできるようになってきています。
+
+* [webpack](https://webpack.js.org/)
 
 ## ビルド
-ビルドが面倒。
+従来はこれらの構成を管理して、ビルドするのが面倒でいろいろなツールが利用された。
 
 * graunt
 * gulp
 * webpack
 
-
-
-
-# 非同期処理
-
-
-## Promise
-
-
-
-
-
-
+最近は各コマンドで実行される。
+* [React create-react-app](https://github.com/facebook/create-react-app)
+* [Angular angular-cli](https://cli.angular.io/)
+* [Vue Vue CLI](https://cli.vuejs.org/)
 
 # ES6
+Nodeの書き方とES6(ECMA Script Verion 6) では若干異なります。
+ReactはES6で書くことが多いため、ここで記載します。
+
+## Classの書き方
+class の記載はほぼ、Javaと一緒ですが、コンストラクタの書き方だけが異なります。
+
+```javascript
+class FriendList extends Component {
+    constructor(props){
+        super(props);
+    }
+}
+```
 
 ## 関数の書き方
-JSでは以下の書き方で関数を作れるが
+JSでは以下の書き方で関数を作れますが
 ```javascript
 function sample (arg1){
   return arg1
 }
 ```
-以下の書き方がES6っぽい。（function componentで利用するのでこちらを利用するほうがよい）
+以下の書き方がES6っぽい書き方です。（function componentで利用するのでこちらを利用するほうがよい）
 ```javascript
 const  sample =  (arg1) => return arg1
 ```
 仮引数の括弧は省略できる。
 
-## dictの取り扱い
+また、Javaとは違いJavascriptでは関数もオブジェクトであるため、関数を返す関数を作ることができます。
+
+```javascript
+    funcfunc()();
+
+    const funcfunc = () => {
+      return () => console.log('関数を戻す関数');
+    }
+```
+みたいな記載ができます。
+
+## Objectの取り扱い
+ES6における連想配列（Object型）
+リテラルで書くことができることが特長です。
+
+```javascript
+  const data = {
+    key1: value1,
+    key2: value2
+  };
+```
+もちろん、これらの内容が変数であっても問題ありません。JavaでいうとMapにあたるものです。
+型は特に意識することはありません。JSON形式で表現します。
+
+書き方として以下のような書き方がよく利用されます。
+
 ``` javascript
-{style} = props
+ let {style,doc} = props
 ```
 
-## ストリーミングAPI
-### map
+これは、
+```javascript
+  let style = props.style;
+  let doc = props.doc;
+```
+と同じです。
 
-### filter
+## 展開記法 (スプレッド記法) 
+Object型の内容を展開する基本です。Reduxではreducerで多用される記法です。
 
-### reduce
+```javascript
+   return {...state,count: state.count + action.value};
+```
+以下の書き方と同等です。ネットを見る場合はこちらの記法で書かれている場合があるため説明に加えました。
+```javascript
+    return Object.assign(state, {count:  state.count + action.value});
+```
 
+## Arrayで重要な関数
+[リファレンス](https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Array)で確認しておきたい関数は以下の通りです。
+
+|関数|説明|
+|---|---|
+|forEach|要素を取り出して処理をする関数|
+|map|各要素に基づいて、新しい要素を作り新しい配列を返戻する関数|
+|filter|条件にあう要素のみを取り出して新しい配列を返戻する関数|
+|reduce/reduceRight|すべての要素を処理して一つの返戻する関数（SUMのようなもので利用）|
+|every/some|要素が条件を見対しているかを判定する。booleanを返戻する関数|
 
 ## モジュールのインポート、エクスポート
+詳細は[リファレンス](https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Statements/import)で確認したいですが、ファイルを分けることによって、他のファイル（パッケージを含む）を参照する時にはimportが必要となります。逆に自分の作成したオブジェクト、関数、クラスを外部から参照させる場合、エクスポートが必要となります。
+
+### デフォルトエクスポートをインポートする場合
+``` javascript
+import React from 'react';
+```
+reactモジュールのデフォルトエクスポートはReactであるため｛｝は不要。
+
+### デフォルトエクスポート以外をインポートする場合
+``` javascript
+import React,{Component} from 'react';
+```
 
 
