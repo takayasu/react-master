@@ -341,6 +341,10 @@ class FlagIcon extends HTMLElement {
 customElements.define("flag-icon", FlagIcon);
 ```
 
+## 宿題3
+WebComponentが現状どのような実装状況であるかを調べることができるようにしてください。
+また、対応してないブラウザにWeb Componentを適用することができるか調べてください。
+
 # コンポーネント間でデータを渡す
 
 ## ステートの考え方
@@ -476,6 +480,10 @@ export default connect(mapStateToProps,mapDispatchToProps)(FriendList);
 |mapDispatchToProps|DispatcherとマッピングするActionCreator（慣習）|
 |connect| 上記のマッピングとコンポーネントを結びつける関数|
 
+## 宿題4
+Fluxは各フレームワークで実装されています。どのようなモジュールとして実現されているか調べてください。
+また、Flux以外の設計・実装パターンについて調べて一つ以上の例をあげてください。
+
 # 画面の構造設計
 * 画面のデータ構造と見栄えについて
 * 画面共通と実装
@@ -483,7 +491,7 @@ export default connect(mapStateToProps,mapDispatchToProps)(FriendList);
 * 構成要素と粒度
 詳細は次回、具体的な実装をみて、ディレクトリ構造を含めて説明します。
 
-## 宿題3
+## 宿題5
 今までのプロジェクト（設計が終わっていれば進行形でもよい）で、画面設計書をみて、画面分割をして構造的に設計するとどうなるかを検討して、画面設計書を作成してください。（一つだけでよいです）
 
 # モダンJSの開発
@@ -514,6 +522,9 @@ node.jsをベースに構築したソースコードをWebで動作させる必�
 * [React create-react-app](https://github.com/facebook/create-react-app)
 * [Angular angular-cli](https://cli.angular.io/)
 * [Vue Vue CLI](https://cli.vuejs.org/)
+
+## 宿題6
+Babelのサイトで変換されることを試してください。
 
 # ES6
 Nodeの書き方とES6(ECMA Script Verion 6) では若干異なります。
@@ -615,5 +626,8 @@ reactモジュールのデフォルトエクスポートはReactであるため�
 ``` javascript
 import React,{Component} from 'react';
 ```
+## 宿題7
+自然数の配列を引数として、その配列の中から素数のものだけを返戻する関数を別ファイルで定義してください。その関数を使うテストしていくつかの配列を準備して試してみてください。
+
 
 
